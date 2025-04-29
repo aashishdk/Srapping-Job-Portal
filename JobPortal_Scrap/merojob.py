@@ -31,16 +31,18 @@ def extract(job):
             #print(f"Job Details URL: {job_details_url}")
 
             # Scrape job details page and store the data
-            job_level, salary, job_description = scrape_job_details(job_details_url)
+            job_level, no_of_openings, salary,experience, job_description = scrape_job_details(job_details_url)
 
             # Print the extracted data
             print(f"Job Title: {job_title}")
             print(f"Location: {location_title}")
-            print(f"Job URL: {job_details_url}")
+            print(f"No. of Openings: {no_of_openings}")
             print(f"Company: {company_title}")
             print(f"Job Level: {job_level}")
             print(f"Salary: {salary}")
-            print(f"Job Description: {job_description}")
+            print(f"Experience: {experience}")
+            print(f"Job URL: {job_details_url}")
+            print(f"Job Description: {job_description}\n")
             print(f"******" * 20)
 
             # Append job data to the list
@@ -48,15 +50,18 @@ def extract(job):
                 'Job Title': job_title,
                 'Company': company_title,
                 'Location': location_title,
+                'No. of Openings': no_of_openings,
                 'Job Level': job_level,
                 'Salary': salary,
+                'Experience': experience,
+                'Job URL': job_details_url,
                 'Job Description': job_description
             })
 
 # Function to scrape job level, salary, and description from the job details page
 def scrape_job_details(job_details_url):
     response = requests.get(job_details_url)
-    job_level = salary = job_description = "Not found"
+    job_level = no_of_openings = salary = experience = job_description = "Not found"
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -68,12 +73,35 @@ def scrape_job_details(job_details_url):
             specific_job_level = job_level_row[1].find_all('td')[2]
             job_level = specific_job_level.text.strip() if specific_job_level else "Job level not found"
 
+        
+        #Extract No. of Openings
+        no_of_openings_tag = soup.find('table', class_='table table-hover m-0')
+        if no_of_openings_tag:
+            no_of_openings_tag_row = no_of_openings_tag.find_all('tr')
+            if no_of_openings_tag_row:
+                specific_openings = no_of_openings_tag_row[2].find_all('td')[2]
+                no_of_openings = specific_openings.text.strip() if specific_openings else "Not found"
+            else:
+                print("Not found")
+
         # Extract salary (if available)
         salary_tag = soup.find('table', class_='table table-hover m-0')
         if salary_tag:
             salary_row = salary_tag.find_all('tr')
-            specific_salary = salary_row[5].find_all('td')[2]
-            salary = specific_salary.text.strip() if specific_salary else "Not found"
+            if salary_row:
+                specific_salary = salary_row[5].find_all('td')[2]
+                salary = specific_salary.text.strip() if specific_salary else "Not found"
+            else:
+                print("Not found")
+        
+        #Extract Experience 
+        tables = soup.find_all('table', class_="table table-hover m-0")
+        if len(tables) > 1:  # Check if the second table exists
+            experience_tag = tables[1]  # Access the second table
+            experience_row = experience_tag.find_all('tr')
+            if experience_row:
+                specific_experience = experience_row[1].find_all('td')[2]
+                experience = specific_experience.text.strip() if specific_experience else "Not found"
 
         # Extract job description (if available)
         description_tag = soup.find("div", class_='card-text p-2', itemprop="description")
@@ -81,12 +109,12 @@ def scrape_job_details(job_details_url):
             description_para = description_tag.find('ul') or description_tag.find('p')
             job_description = description_para.text.strip() if description_para else "Not found"
 
-    return job_level, salary, job_description
+    return job_level, no_of_openings, salary, experience, job_description
 
 # Base URL with pagination parameter
 base_url = 'https://merojob.com/search/?q=&page='
 
-max_pages = 30  # Change this to limit the number of pages you want to scrape
+max_pages = 50  # Change this to limit the number of pages you want to scrape
 
 for page in range(1, max_pages + 1):
     print(f"\nScraping Page {page}...\n")

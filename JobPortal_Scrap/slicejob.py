@@ -25,6 +25,17 @@ def extract(job):
         location_tag = item.find("li", class_='job_company')
         location_title = location_tag.text.strip() if location_tag else "Location not found"
 
+        #Extract No. of Openings
+        no_of_openings = "Not Mentioned"
+        
+        #Scrapping Experience
+        experience_tag = item.find('li',class_="job_experience")
+        if experience_tag:
+            raw_experience = experience_tag.text.strip()
+            experience = raw_experience.split("Year")[0].strip() + " Year"
+        else:
+            experience = "Not Mentioned"
+
         # Extract the link to the job details page
         job_details_link = item.find('a', href=True)['href'] if item.find('a', href=True) else None
         if job_details_link:
@@ -36,10 +47,13 @@ def extract(job):
             # Print the extracted data
             print(f"Job Title: {job_title}")
             print(f"Location: {location_title}")
+            print(f"No. of Openings: {no_of_openings}")
             print(f"Job URL: {job_details_url}")
             print(f"Company: {company}")
             print(f"Job Level: {job_level}")
             print(f"Salary: {salary}")
+            print(f"Experience: {experience}")
+            print(f"Job URL: {job_details_url}")
             print(f"Job Description: {job_description}")
             print(f"******" * 20)
 
@@ -48,8 +62,11 @@ def extract(job):
                 'Job Title': job_title,
                 'Company': company,
                 'Location': location_title,
+                'No. of Openings': no_of_openings,
                 'Job Level': job_level,
                 'Salary': salary,
+                'Experience': experience,
+                'Job URL': job_details_url,
                 'Job Description': job_description
             })
         else:
@@ -58,8 +75,7 @@ def extract(job):
 # Function to scrape job level, salary, and description from the job details page
 def scrape_job_details(job_details_url):
     response = requests.get(job_details_url)
-    job_level = salary = job_description = "Not found"
-    company = "Not found"
+    company = job_level = salary = job_description = "Not found"
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')

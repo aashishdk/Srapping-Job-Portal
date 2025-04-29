@@ -28,18 +28,20 @@ def extract(job):
         job_details_link = item.find('a', href=True)['href'] if item.find('a', href=True) else None
         if job_details_link:
             job_details_url = f'{job_details_link}'
-            print(f"Job Details URL: {job_details_url}")
 
             # Scrape job details page and get the extracted data
-            location, job_level, salary, job_description = scrape_job_details(job_details_url)
+            location, no_of_openings, job_level, salary, experience, job_description = scrape_job_details(job_details_url)
 
             # Append data to job_data list
             job_data.append({
                 'Job Title': job_title,
                 'Company': company_title,
                 'Location': location,
+                'No. of Openings': no_of_openings,
                 'Job Level': job_level,
                 'Salary': salary,
+                'Experience': experience,
+                'Job URL': job_details_url,
                 'Job Description': job_description
             })
         else:
@@ -54,7 +56,9 @@ def scrape_job_details(job_details_url):
         # Initialize values
         location = "Not mentioned"
         job_level = "Not mentioned"
-        salary = "Not Mentioned"
+        salary = "Not mentioned"
+        experience = "Not mentioned"
+        no_of_openings = "Not mentioned"
 
         # Extract job details dynamically based on label text
         details = soup.find_all('li', class_="row")
@@ -69,10 +73,15 @@ def scrape_job_details(job_details_url):
 
                 if "Location" in label_text:
                     location = value_text
+                elif "No. of Openings" in label_text:
+                    no_of_openings = value_text
                 elif "Job Level" in label_text:
                     job_level = value_text
                 elif "Salary" in label_text:
                     salary = value_text
+                elif "Experience" in label_text:
+                    experience = value_text
+
 
         # Extract Job Description
         description_tag = soup.find("div", class_='job-description-wrap')
@@ -84,19 +93,22 @@ def scrape_job_details(job_details_url):
 
         # Print job details
         print(f"Location: {location}")
+        print(f"No of Openings: {no_of_openings}")
         print(f"Job Level: {job_level}")
         print(f"Salary: {salary}")
-        print(f"Job Description: {job_description}")
-        print("-" * 50)
+        print(f"Experience: {experience}")
+        print(f"Job URL: {job_details_url}")
+        print(f"Job Description: {job_description}\n")
+        print("***" *20 )
 
-        return location, job_level, salary, job_description 
+        return location, no_of_openings, job_level, salary, experience, job_description 
     else:
         print(f"Failed to fetch job details for {job_details_url}")
-        return "Not Found", "Not Found", "Not Found", "Not Found"
+        return "Not Found", "Not Found", "Not Found", "Not Found",
 
 # Base URL with pagination parameter
 base_url = 'https://www.kumarijob.com/search?page='
-max_pages = 18
+max_pages = 50
 
 for page in range(1, max_pages + 1):
     print(f"\nScraping Page {page}...\n")
@@ -105,7 +117,12 @@ for page in range(1, max_pages + 1):
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-        extract(soup)
+
+        if not soup.find('div', class_="left"):  # No job listings found
+            print(f"Only {page} pages are available on the website. Stopping scraping.")
+            break
+        else:
+            extract(soup)
     else:
         print(f"Failed to fetch page {page}")
 
