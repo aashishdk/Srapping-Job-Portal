@@ -1,2 +1,2 @@
+In this project, I scraped data from various job portals in Nepal using BeautifulSoup and Selenium. The collected data includes key information such as job title, company name, location, job level, salary, and job description. After scraping, I combined all the CSV files into one and loaded the data into Databricks. There, I transformed the DataFrame and visualized the results using bar graphs and pie charts.
 
-In this project, I scraped data  from various job portals in Nepal using BeautifulSoup and Selenium. The data collected includes key information such as: Job Title, Company, Location, Job Level, Salary, and Job Description, which will be further used for Analysis purposes.
